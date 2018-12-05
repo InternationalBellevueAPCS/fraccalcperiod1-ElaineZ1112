@@ -1,14 +1,38 @@
-public class FracCalc {
+import java.util.*;
+import java.lang.*;
+
+public class FracCalc 
+{
 
     /**
      * Prompts user for input, passes that input to produceAnswer, then outputs the result.
      * @param args - unused
      */
-    public static void main(String[] args) 
+    public static void main(String[] args) throws Exception
     {
         // TODO: Read the input from the user and call produceAnswer with an equation
         // Checkpoint 1: Create a Scanner, read one line of input, pass that input to produceAnswer, print the result.
         // Checkpoint 2: Accept user input multiple times.
+    	
+    	
+    	Scanner scanner = new Scanner(System.in);
+    	boolean done = false;
+
+    	
+    	while(!done)
+    	{
+    		System.out.print("Input an equation: (type \"quit\" to stop) ");    	
+    		String input = scanner.nextLine();
+    		
+    		if (input.equals("quit")) done = true;
+    		
+    		if (!done) 
+    		{
+    			System.out.println(produceAnswer(input));
+    		}
+    	}
+
+    	scanner.close();
     }
     
     /**
@@ -30,8 +54,163 @@ public class FracCalc {
         // Final project: All answers must be reduced.
         //               Example "4/5 * 1_2/4" returns "1_1/5".
         
-        return "";
+    	boolean addition = false;
+    	boolean subtraction = false;
+    	boolean multiplication = false;
+    	boolean division = false;
+    	
+    	String first;
+    	String operator;
+    	String second;
+    	
+    	int index = input.indexOf(' ');
+    	first = input.substring(0, index);
+    	input = input.substring(index + 1);
+    	
+    	index = input.indexOf(' ');
+    	operator = input.substring(0, index);
+    	input = input.substring(index + 1);
+    	
+    	second = input;
+    	
+    	addition = operator.equals("+");
+    	subtraction = operator.equals("-");
+    	multiplication = operator.equals("*");
+    	division = operator.equals("/");
+    	
+    	int[] firstNumber = returnNumberFromString(first);
+    	int[] secondNumber = returnNumberFromString(second);
+    	int[] answer = new int[3];
+    	
+    	if (addition)
+    	{
+    		answer = addition(firstNumber, secondNumber);
+    	}
+    	else if (subtraction)
+    	{
+    		answer = subtraction(firstNumber, secondNumber);
+    	}
+    	else if (multiplication)
+    	{
+    		answer = multiplication(firstNumber, secondNumber);
+    	}
+    	else if (division)
+    	{
+    		answer = division(firstNumber, secondNumber);
+    	}
+    	
+    	int[] simplified = simplify(answer);
+    	
+    	String value = "";
+    	
+    	if (simplified[0] != 0 && simplified[1] != 0)
+    	{
+    		value += simplified[0] + "_" + simplified[1] + "/" + simplified[2];
+    	}
+    	else if (simplified[1] != 0)
+    	{
+    		value += simplified[1] + "/" + simplified[2];
+    	}
+    	else if (simplified[0] != 0)
+    	{
+    		value += simplified[0];
+    	}
+    	
+        return value;
     }
+    
+    public static int[] addition(int[] firstNumber, int[] secondNumber)
+    {
+    	int[] answer = new int[3];
+    	answer[0] = firstNumber[0] + secondNumber[0];
+    	answer[2] = firstNumber[2] * secondNumber[2];
+    	answer[1] = (firstNumber[1] * secondNumber[2]) + (secondNumber[1] * firstNumber[2]);
+    	
+    	return answer;
+    }
+    
+    public static int[] subtraction(int[] firstNumber, int[] secondNumber)
+    {
+    	int[] answer = new int[3];
+    	answer[0] = firstNumber[0] - secondNumber[0];
+    	answer[2] = firstNumber[2] * secondNumber[2];
+    	if (firstNumber[1] > secondNumber[1])
+    	{
+    		answer[1] = (firstNumber[1] * secondNumber[2]) - (secondNumber[1] * firstNumber[2]);
+    	}
+    	else
+    	{
+    		answer[0]--;
+    		answer[1] = (firstNumber[1] * secondNumber[2] + answer[2]) - (secondNumber[1] * firstNumber[2]);
+    	}
+    	return answer;
+    }
+    
+    public static int[] multiplication(int[] firstNumber, int[] secondNumber)
+    {
+    	int[] answer = new int[3];
+    	answer[1] = (firstNumber[1] + firstNumber[0] * firstNumber[2]) * (secondNumber[1] + secondNumber[0] * secondNumber[2]);
+    	answer[2] = firstNumber[2] * secondNumber[2];
+    	return answer;
+    }
+    
+    public static int[] division(int[] firstNumber, int[] secondNumber)
+    {
+    	int[] answer = new int[3];
+    	answer[1] = (firstNumber[1] + firstNumber[0] * firstNumber[2]) * secondNumber[2];
+    	answer[2] = firstNumber[2] * (secondNumber[1] + secondNumber[0] * secondNumber[2]);
+    	return answer;
+    }
+    
+    public static int[] simplify(int[] number)
+    {
+    	int gcd = greatestCommonDivisor(number[1], number[2]);
+    	number[1] /= gcd;
+    	number[2] /= gcd;
+    	
+    	if (number[1] >= number[2]) 
+    	{
+    		number[0] += number[1] / number[2];
+    		number[1] = number[1] % number[2];
+    	}
+    	
+    	return number;
+    }
+    
+    public static int[] returnNumberFromString(String input)
+    {
+    	int[] number = new int[3];
+    	number[1] = 0;
+    	number[2] = 1;
+    	
+    	
+    	
+    	if (input.contains("_") && input.contains("/"))
+    	{
+    		int index = input.indexOf('_');
+    		number[0] = Integer.parseInt(input.substring(0, index));
+    		input = input.substring(index + 1);
+    	} 
+    	else if (!input.contains("_") && !input.contains("/"))
+    	{
+    		number[0] = Integer.parseInt(input);
+    	}
+    	
+    	if (input.contains("/"))
+		{
+    		int index = input.indexOf('/');
+    		number[1] = Integer.parseInt(input.substring(0, index));
+    		number[2] = Integer.parseInt(input.substring(index + 1));
+		}
+    	
+    	if (number[1] > number[2]) 
+    	{
+    		number[0] += number[1] / number[2];
+    		number[1] = number[1] % number[2];
+    	}
+    	return number;
+    }
+    
 
     // TODO: Fill in the space below with helper methods
     
